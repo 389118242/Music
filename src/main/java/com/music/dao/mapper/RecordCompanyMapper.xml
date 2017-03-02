@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.RecordCompanyDao">
+  <resultMap id="BaseResultMap" type="com.music.entity.RecordCompany">
+    <id column="rcId" jdbcType="INTEGER" property="rcId" />
+    <result column="companyName" jdbcType="VARCHAR" property="companyName" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    rcId, companyName
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from record_company
+    where rcId = #{rcId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from record_company
+    where rcId = #{rcId,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.music.entity.RecordCompany">
+    insert into record_company (rcId, companyName)
+    values (#{rcId,jdbcType=INTEGER}, #{companyName,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.music.entity.RecordCompany">
+    insert into record_company
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="rcId != null">
+        rcId,
+      </if>
+      <if test="companyName != null">
+        companyName,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="rcId != null">
+        #{rcId,jdbcType=INTEGER},
+      </if>
+      <if test="companyName != null">
+        #{companyName,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.music.entity.RecordCompany">
+    update record_company
+    <set>
+      <if test="companyName != null">
+        companyName = #{companyName,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where rcId = #{rcId,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.music.entity.RecordCompany">
+    update record_company
+    set companyName = #{companyName,jdbcType=VARCHAR}
+    where rcId = #{rcId,jdbcType=INTEGER}
+  </update>
+</mapper>

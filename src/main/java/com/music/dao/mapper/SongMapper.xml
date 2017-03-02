@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.SongDao">
+	<resultMap id="SongResultMap" type="com.music.entity.Song">
+		<id column="songId" jdbcType="INTEGER" property="songId" />
+		<result column="songName" jdbcType="VARCHAR" property="songName" />
+		<result column="singerId" jdbcType="INTEGER" property="singerId" />
+		<result column="albumId" jdbcType="INTEGER" property="albumId" />
+		<result column="songTime" jdbcType="VARCHAR" property="songTime" />
+		<result column="playNum" jdbcType="INTEGER" property="playNum" />
+		<result column="mv" jdbcType="VARCHAR" property="mv" />
+		<association property="album" javaType="album">
+			<id column="albumId" property="albumId" />
+			<result column="albumImg" jdbcType="VARCHAR" property="albumImg" />
+		</association>
+		<association property="singer" javaType="singer">
+			<id column="singerId" jdbcType="INTEGER" property="singerId" />
+			<result column="singerName" jdbcType="VARCHAR" property="singerName" />
+		</association>
+	</resultMap>
+	<resultMap extends="SongResultMap" id="ResultMapWithBLOBs"
+		type="com.music.entity.Song">
+		<result column="lyric" jdbcType="LONGVARCHAR" property="lyric" />
+	</resultMap>
+	<resultMap type="song" id="SongWithAlbumResultMap">
+		<id column="songId" jdbcType="INTEGER" property="songId" />
+		<result column="songName" jdbcType="VARCHAR" property="songName" />
+		<result column="songTime" jdbcType="VARCHAR" property="songTime" />
+		<association property="album" javaType="album">
+			<id column="albumId" property="albumId" />
+			<result column="albumName" property="albumName" />
+		</association>
+	</resultMap>
+	<resultMap type="song" id="SongWithAlbumLyricResultMap">
+		<id column="songId" jdbcType="INTEGER" property="songId" />
+		<result column="songName" jdbcType="VARCHAR" property="songName" />
+		<result column="lyric" jdbcType="VARCHAR" property="lyric" />
+		<association property="album" javaType="album">
+			<id column="albumId" property="albumId" />
+			<result column="albumName" property="albumName" />
+		</association>
+	</resultMap>
+	<resultMap type="song" id="SongWithSingerResultMap">
+		<id column="songId" jdbcType="INTEGER" property="songId" />
+		<result column="songName" jdbcType="VARCHAR" property="songName" />
+		<result column="songTime" jdbcType="VARCHAR" property="songTime" />
+		<association property="singer" javaType="singer">
+			<id column="singerId" property="singerId" />
+			<result column="singerName" property="singerName" />
+		</association>
+	</resultMap>
+	<sql id="Base_Column_List">
+		songId, songName, singerId, albumId, songTime, playNum, mv
+	</sql>
+	<sql id="Blob_Column_List">
+		lyric
+	</sql>
+	<select id="selectSongIdByAlbumId" resultType="integer">
+		select songId from
+		song where albumId=#{albumId} order by songId
+	</select>
+	<select id="selectWithLyric" resultMap="SongWithAlbumLyricResultMap">
+		select
+		songId,songName,lyric,album.albumId,albumName from song,album
+		where
+		song.albumId=album.albumId and song.songId = #{param}
+	</select>
+	<!-- 通过singerId查找点击量前五十的歌曲 -->
+	<select id="selectSongBySingerId" resultMap="SongWithAlbumResultMap">
+		select
+		songId,songName,songTime,album.albumId,albumName from song,album
+		where
+		song.albumId=album.albumId and song.singerId = #{0}
+		ORDER BY playNum
+		DESC
+		limit 0,50
+	</select>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select
+		songId, songName, si.singerId, albumId, songTime, playNum, mv,
+		<include refid="Blob_Column_List" />,si.singerName
+		from song s,singer si
+		where songId = #{songId,jdbcType=INTEGER} and s.singerId=si.singerId
+	</select>
+
+	<select id="selectSongByListId" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select
+		s.songId,s.songTime,s.songName,singer.singerId,singer.singerName from
+		song s,sl_song_relation ssr,singer where
+		ssr.slId=#{songListId,jdbcType=INTEGER} and ssr.songId=s.songId and
+		s.singerId=singer.singerId
+	</select>
+
+	<select id="selectPaihangbang" resultMap="SongResultMap">
+		select
+		so.songId,so.songName,so.singerId,s.singerName,a.albumImg
+		from song so,singer s,
+		album a
+		where so.singerId = s.singerId and a.albumId = so.albumId
+		ORDER
+		BY playNum DESC limit 0,9
+	</select>
+
+	<select id="selectSongCountByKeyword" resultType="_int">
+		select count(*)
+		from song where songName like '%${value}%'
+	</select>
+	<select id="selectSongByKeyword" resultMap="SongWithSingerResultMap">
+		select
+		o.songId,o.songName,o.songTime,i.singerId,singerName from song
+		o,singer i where o.singerId=i.singerId and songName like
+		'%${param1}%'
+		limit #{param2},#{param3}
+	</select>
+
+	<!--=========获取list 歌id、歌名、歌手名、专辑图片、============ -->
+	<select id="selectindexlist" resultMap="SongResultMap">
+		select
+		so.songId,so.songName,s.singerId,s.singerName,a.albumImg
+		from song
+		so,singer s,
+		album a
+		where so.singerId = s.singerId and a.albumId =
+		so.albumId
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from song
+		where songId = #{songId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.Song">
+		insert into song (songId,
+		songName, singerId,
+		albumId, songTime, playNum,
+		mv, lyric)
+		values
+		(#{songId,jdbcType=INTEGER}, #{songName,jdbcType=VARCHAR},
+		#{singerId,jdbcType=INTEGER},
+		#{albumId,jdbcType=INTEGER},
+		#{songTime,jdbcType=VARCHAR}, #{playNum,jdbcType=INTEGER},
+		#{mv,jdbcType=VARCHAR}, #{lyric,jdbcType=LONGVARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.Song">
+		insert into song
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="songId != null">
+				songId,
+			</if>
+			<if test="songName != null">
+				songName,
+			</if>
+			<if test="singerId != null">
+				singerId,
+			</if>
+			<if test="albumId != null">
+				albumId,
+			</if>
+			<if test="songTime != null">
+				songTime,
+			</if>
+			<if test="playNum != null">
+				playNum,
+			</if>
+			<if test="mv != null">
+				mv,
+			</if>
+			<if test="lyric != null">
+				lyric,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="songId != null">
+				#{songId,jdbcType=INTEGER},
+			</if>
+			<if test="songName != null">
+				#{songName,jdbcType=VARCHAR},
+			</if>
+			<if test="singerId != null">
+				#{singerId,jdbcType=INTEGER},
+			</if>
+			<if test="albumId != null">
+				#{albumId,jdbcType=INTEGER},
+			</if>
+			<if test="songTime != null">
+				#{songTime,jdbcType=VARCHAR},
+			</if>
+			<if test="playNum != null">
+				#{playNum,jdbcType=INTEGER},
+			</if>
+			<if test="mv != null">
+				#{mv,jdbcType=VARCHAR},
+			</if>
+			<if test="lyric != null">
+				#{lyric,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.Song">
+		update song
+		<set>
+			<if test="songName != null">
+				songName = #{songName,jdbcType=VARCHAR},
+			</if>
+			<if test="singerId != null">
+				singerId = #{singerId,jdbcType=INTEGER},
+			</if>
+			<if test="albumId != null">
+				albumId = #{albumId,jdbcType=INTEGER},
+			</if>
+			<if test="songTime != null">
+				songTime = #{songTime,jdbcType=VARCHAR},
+			</if>
+			<if test="playNum != null">
+				playNum = #{playNum,jdbcType=INTEGER},
+			</if>
+			<if test="mv != null">
+				mv = #{mv,jdbcType=VARCHAR},
+			</if>
+			<if test="lyric != null">
+				lyric = #{lyric,jdbcType=LONGVARCHAR},
+			</if>
+		</set>
+		where songId = #{songId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKeyWithBLOBs" parameterType="com.music.entity.Song">
+		update
+		song
+		set songName = #{songName,jdbcType=VARCHAR},
+		singerId =
+		#{singerId,jdbcType=INTEGER},
+		albumId = #{albumId,jdbcType=INTEGER},
+		songTime = #{songTime,jdbcType=VARCHAR},
+		playNum =
+		#{playNum,jdbcType=INTEGER},
+		mv = #{mv,jdbcType=VARCHAR},
+		lyric =
+		#{lyric,jdbcType=LONGVARCHAR}
+		where songId = #{songId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.Song">
+		update song
+		set
+		songName = #{songName,jdbcType=VARCHAR},
+		singerId =
+		#{singerId,jdbcType=INTEGER},
+		albumId = #{albumId,jdbcType=INTEGER},
+		songTime = #{songTime,jdbcType=VARCHAR},
+		playNum =
+		#{playNum,jdbcType=INTEGER},
+		mv = #{mv,jdbcType=VARCHAR}
+		where songId =
+		#{songId,jdbcType=INTEGER}
+	</update>
+	<update id="updateBySongid" parameterType="java.lang.Integer">
+		update song
+		set
+		playNum
+		= (playNum + 1)
+		where
+		songId =
+		#{songId,jdbcType=INTEGER}
+	</update>
+</mapper>

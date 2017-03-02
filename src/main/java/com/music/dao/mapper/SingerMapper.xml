@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.SingerDao">
+	<resultMap id="SingerDaoResultMap" type="com.music.entity.Singer">
+		<id column="singerId" jdbcType="INTEGER" property="singerId" />
+		<result column="singerName" jdbcType="VARCHAR" property="singerName" />
+		<result column="singerImg" jdbcType="VARCHAR" property="singerImg" />
+	</resultMap>
+	<resultMap extends="SingerDaoResultMap" id="ResultMapWithBLOBs"
+		type="com.music.entity.Singer">
+		<result column="singerDetail" jdbcType="LONGVARCHAR" property="singerDetail" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		singerId, singerName, singerImg
+	</sql>
+	<sql id="Blob_Column_List">
+		singerDetail
+	</sql>
+	<!-- 通过singerId查找歌手信息 -->
+	<select id="selectSingerMsg" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select
+		<include refid="Base_Column_List" />
+		,
+		<include refid="Blob_Column_List" />
+		from singer
+		where singerId = #{singerId,jdbcType=INTEGER}
+	</select>
+
+	<select id="selectRowsumByKeyword" resultType="_int">
+		select count(*)
+		from singer where singerName like
+		'%${value}%'
+	</select>
+	<select id="selectByKeyword" resultType="singer">
+		select
+		singerId,singerName,singerImg from singer where singerName like
+		'%${param1}%'
+		limit #{1},#{2}
+	</select>
+	<select id="selectNameByid" parameterType="java.lang.Integer"
+		resultType="java.lang.String">
+		select singerName
+		from singer
+		where singerId = #{singerId,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from singer
+		where singerId = #{singerId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.Singer">
+		insert into singer (singerId,
+		singerName, singerImg,
+		singerDetail)
+		values
+		(#{singerId,jdbcType=INTEGER}, #{singerName,jdbcType=VARCHAR},
+		#{singerImg,jdbcType=VARCHAR},
+		#{singerDetail,jdbcType=LONGVARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.Singer">
+		insert into singer
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="singerId != null">
+				singerId,
+			</if>
+			<if test="singerName != null">
+				singerName,
+			</if>
+			<if test="singerImg != null">
+				singerImg,
+			</if>
+			<if test="singerDetail != null">
+				singerDetail,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="singerId != null">
+				#{singerId,jdbcType=INTEGER},
+			</if>
+			<if test="singerName != null">
+				#{singerName,jdbcType=VARCHAR},
+			</if>
+			<if test="singerImg != null">
+				#{singerImg,jdbcType=VARCHAR},
+			</if>
+			<if test="singerDetail != null">
+				#{singerDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.Singer">
+		update singer
+		<set>
+			<if test="singerName != null">
+				singerName = #{singerName,jdbcType=VARCHAR},
+			</if>
+			<if test="singerImg != null">
+				singerImg = #{singerImg,jdbcType=VARCHAR},
+			</if>
+			<if test="singerDetail != null">
+				singerDetail = #{singerDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</set>
+		where singerId = #{singerId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKeyWithBLOBs" parameterType="com.music.entity.Singer">
+		update
+		singer
+		set singerName = #{singerName,jdbcType=VARCHAR},
+		singerImg =
+		#{singerImg,jdbcType=VARCHAR},
+		singerDetail =
+		#{singerDetail,jdbcType=LONGVARCHAR}
+		where singerId =
+		#{singerId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.Singer">
+		update singer
+		set
+		singerName = #{singerName,jdbcType=VARCHAR},
+		singerImg =
+		#{singerImg,jdbcType=VARCHAR}
+		where singerId =
+		#{singerId,jdbcType=INTEGER}
+	</update>
+</mapper>

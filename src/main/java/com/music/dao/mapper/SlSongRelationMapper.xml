@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.music.dao.SlSongRelationDao">
+
+	<!-- 根据歌单id选出对应的歌曲数 -->
+	<select id="selectSongSum" parameterType="java.lang.Integer"
+		resultType="java.lang.Integer">
+		select count(*)as songSum from sl_song_relation ssr where
+		ssr.slId=#{slId,jdbcType=INTEGER}
+	</select>
+
+	<!--收藏歌曲到歌单 -->
+	<insert id="insertSongToList">
+		insert into
+		sl_song_relation(slId,songId)
+		values(#{0},#{1})
+	</insert>
+
+	<select id="selectSongIdBySlId" resultType="integer">
+		select songId from
+		sl_song_relation where
+		slId=#{param}
+	</select>
+	<delete id="deleteBySongListId">
+		delete from sl_song_relation where slId=#{listId}
+	</delete>
+	<delete id="delete">
+		delete from sl_song_relation where slId=#{0} and songId=#{1}
+	</delete>
+
+</mapper>

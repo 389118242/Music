@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.ListKindDao">
+	<resultMap id="BaseResultMap" type="com.music.entity.ListKind">
+		<id column="kindId" jdbcType="INTEGER" property="kindId" />
+		<result column="kindName" jdbcType="VARCHAR" property="kindName" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		kindId, kindName
+	</sql>
+	<select id="select" resultType="listKind">
+		select
+		<include refid="Base_Column_List" />
+		from list_kind
+	</select>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from list_kind
+		where kindId = #{kindId,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from
+		list_kind
+		where kindId = #{kindId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.ListKind">
+		insert into list_kind (kindId,
+		kindName)
+		values (#{kindId,jdbcType=INTEGER},
+		#{kindName,jdbcType=VARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.ListKind">
+		insert into list_kind
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="kindId != null">
+				kindId,
+			</if>
+			<if test="kindName != null">
+				kindName,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="kindId != null">
+				#{kindId,jdbcType=INTEGER},
+			</if>
+			<if test="kindName != null">
+				#{kindName,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.ListKind">
+		update list_kind
+		<set>
+			<if test="kindName != null">
+				kindName = #{kindName,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where kindId = #{kindId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.ListKind">
+		update list_kind
+		set kindName = #{kindName,jdbcType=VARCHAR}
+		where kindId =
+		#{kindId,jdbcType=INTEGER}
+	</update>
+</mapper>

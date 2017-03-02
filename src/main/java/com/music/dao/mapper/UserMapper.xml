@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.UserDao">
+	<resultMap id="BaseResultMap" type="com.music.entity.User">
+		<id column="userId" jdbcType="INTEGER" property="userId" />
+		<result column="userAccount" jdbcType="VARCHAR" property="userAccount" />
+		<result column="userPassword" jdbcType="VARCHAR" property="userPassword" />
+		<result column="userName" jdbcType="VARCHAR" property="userName" />
+		<result column="userGender" jdbcType="INTEGER" property="userGender" />
+		<result column="userBirthDay" jdbcType="DATE" property="userBirthDay" />
+		<result column="userAddress" jdbcType="INTEGER" property="userAddress" />
+		<result column="userEmail" jdbcType="VARCHAR" property="userEmail" />
+		<result column="userState" jdbcType="INTEGER" property="userState" />
+		<result column="registerDate" jdbcType="TIMESTAMP" property="registerDate" />
+	</resultMap>
+	<resultMap extends="BaseResultMap" id="ResultMapWithBLOBs"
+		type="com.music.entity.UserWithBLOBs">
+		<result column="userImg" jdbcType="LONGVARCHAR" property="userImg" />
+		<result column="userDetail" jdbcType="LONGVARCHAR" property="userDetail" />
+		<association property="province" javaType="address">
+			<id column="p_addressId" property="addressId" />
+			<result column="p_addressName" property="addressName" />
+		</association>
+		<association property="city" javaType="address">
+			<id column="c_addressId" property="addressId" />
+			<result column="c_addressName" property="addressName" />
+		</association>
+		<association property="district" javaType="address">
+			<id column="d_addressId" property="addressId" />
+			<result column="d_addressName" property="addressName" />
+		</association>
+	</resultMap>
+	<sql id="Base_Column_List">
+		userId, userAccount, userPassword, userName, userGender,
+		userBirthDay,
+		userAddress,
+		userEmail, userState, registerDate
+	</sql>
+	<sql id="Blob_Column_List">
+		userImg, userDetail
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		<!-- SELECT u.*,p.addressId p_addressId,p.addressName p_addressName,c.addressId 
+			c_addressId,c.addressName c_addressName,d.addressId d_addressId,d.addressName 
+			d_addressName FROM user u,address p, address c,address d where u.userAddress=d.addressId 
+			and d.parentId=c.addressId and c.parentId=p.addressId and userId = #{userId,jdbcType=INTEGER} -->
+		select u.*,p.addressId p_addressId,p.addressName p_addressName from
+		(SELECT u.*,c.addressId c_addressId,c.addressName
+		c_addressName,c.parentId cpId FROM (SELECT u.*,d.addressId
+		d_addressId,d.addressName d_addressName,d.parentId dpId FROM user u
+		LEFT JOIN address d ON u.userAddress=d.addressId where userId =
+		#{param}) u
+		LEFT JOIN address c on u.dpId=c.addressId) u LEFT JOIN address p on
+		u.cpId=p.addressId;
+	</select>
+	<select id="selectByAccount" parameterType="string" resultType="_int">
+		select count(*) from user where userAccount=#{param}
+	</select>
+	<select id="selectByAccountAndPassword" resultType="user">
+		select
+		<include refid="Base_Column_List" />
+		from user
+		where userAccount=#{userAccount} and
+		userPassword=#{userPassword}
+	</select>
+	<select id="selectImgByPrimaryKey" resultType="string">
+		select userImg
+		from user where userId=#{param}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from user
+		where userId = #{userId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.UserWithBLOBs">
+		insert into user (userId,
+		userAccount, userPassword,
+		userName, userGender, userBirthDay,
+		userAddress, userEmail, userState,
+		registerDate, userImg, userDetail
+		)
+		values (#{userId,jdbcType=INTEGER}, #{userAccount,jdbcType=VARCHAR},
+		#{userPassword,jdbcType=VARCHAR},
+		#{userName,jdbcType=VARCHAR},
+		#{userGender,jdbcType=INTEGER}, #{userBirthDay,jdbcType=DATE},
+		#{userAddress,jdbcType=INTEGER}, #{userEmail,jdbcType=VARCHAR},
+		#{userState,jdbcType=INTEGER},
+		#{registerDate,jdbcType=TIMESTAMP},
+		#{userImg,jdbcType=LONGVARCHAR}, #{userDetail,jdbcType=LONGVARCHAR}
+		)
+	</insert>
+	<insert id="insertUser" keyProperty="userId">
+		insert into user
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			userImg,
+			<if test="userAccount != null">
+				userAccount,
+			</if>
+			<if test="userPassword != null">
+				userPassword,
+			</if>
+			<if test="userName != null">
+				userName,
+			</if>
+			<if test="userEmail != null">
+				userEmail,
+			</if>
+			<if test="registerDate != null">
+				registerDate,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			'images/user_default.png',
+			<if test="userAccount != null">
+				#{userAccount,jdbcType=VARCHAR},
+			</if>
+			<if test="userPassword != null">
+				#{userPassword,jdbcType=VARCHAR},
+			</if>
+			<if test="userName != null">
+				#{userName,jdbcType=VARCHAR},
+			</if>
+			<if test="userEmail != null">
+				#{userEmail,jdbcType=VARCHAR},
+			</if>
+			<if test="registerDate != null">
+				#{registerDate,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.UserWithBLOBs">
+		insert into user
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="userId != null">
+				userId,
+			</if>
+			<if test="userAccount != null">
+				userAccount,
+			</if>
+			<if test="userPassword != null">
+				userPassword,
+			</if>
+			<if test="userName != null">
+				userName,
+			</if>
+			<if test="userGender != null">
+				userGender,
+			</if>
+			<if test="userBirthDay != null">
+				userBirthDay,
+			</if>
+			<if test="userAddress != null">
+				userAddress,
+			</if>
+			<if test="userEmail != null">
+				userEmail,
+			</if>
+			<if test="userState != null">
+				userState,
+			</if>
+			<if test="registerDate != null">
+				registerDate,
+			</if>
+			<if test="userImg != null">
+				userImg,
+			</if>
+			<if test="userDetail != null">
+				userDetail,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="userId != null">
+				#{userId,jdbcType=INTEGER},
+			</if>
+			<if test="userAccount != null">
+				#{userAccount,jdbcType=VARCHAR},
+			</if>
+			<if test="userPassword != null">
+				#{userPassword,jdbcType=VARCHAR},
+			</if>
+			<if test="userName != null">
+				#{userName,jdbcType=VARCHAR},
+			</if>
+			<if test="userGender != null">
+				#{userGender,jdbcType=INTEGER},
+			</if>
+			<if test="userBirthDay != null">
+				#{userBirthDay,jdbcType=DATE},
+			</if>
+			<if test="userAddress != null">
+				#{userAddress,jdbcType=INTEGER},
+			</if>
+			<if test="userEmail != null">
+				#{userEmail,jdbcType=VARCHAR},
+			</if>
+			<if test="userState != null">
+				#{userState,jdbcType=INTEGER},
+			</if>
+			<if test="registerDate != null">
+				#{registerDate,jdbcType=TIMESTAMP},
+			</if>
+			<if test="userImg != null">
+				#{userImg,jdbcType=LONGVARCHAR},
+			</if>
+			<if test="userDetail != null">
+				#{userDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.UserWithBLOBs">
+		update user
+		<set>
+			<if test="userAccount != null">
+				userAccount = #{userAccount,jdbcType=VARCHAR},
+			</if>
+			<if test="userPassword != null">
+				userPassword = #{userPassword,jdbcType=VARCHAR},
+			</if>
+			<if test="userName != null">
+				userName = #{userName,jdbcType=VARCHAR},
+			</if>
+			<if test="userGender != null">
+				userGender = #{userGender,jdbcType=INTEGER},
+			</if>
+			<if test="userBirthDay != null">
+				userBirthDay = #{userBirthDay,jdbcType=DATE},
+			</if>
+			<if test="userAddress != null">
+				userAddress = #{userAddress,jdbcType=INTEGER},
+			</if>
+			<if test="userEmail != null">
+				userEmail = #{userEmail,jdbcType=VARCHAR},
+			</if>
+			<if test="userState != null">
+				userState = #{userState,jdbcType=INTEGER},
+			</if>
+			<if test="registerDate != null">
+				registerDate = #{registerDate,jdbcType=TIMESTAMP},
+			</if>
+			<if test="userImg != null">
+				userImg = #{userImg,jdbcType=LONGVARCHAR},
+			</if>
+			<if test="userDetail != null">
+				userDetail = #{userDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</set>
+		where userId = #{userId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKeyWithBLOBs" parameterType="com.music.entity.UserWithBLOBs">
+		update
+		user
+		set userAccount = #{userAccount,jdbcType=VARCHAR},
+		userPassword =
+		#{userPassword,jdbcType=VARCHAR},
+		userName =
+		#{userName,jdbcType=VARCHAR},
+		userGender =
+		#{userGender,jdbcType=INTEGER},
+		userBirthDay =
+		#{userBirthDay,jdbcType=DATE},
+		userAddress =
+		#{userAddress,jdbcType=INTEGER},
+		userEmail =
+		#{userEmail,jdbcType=VARCHAR},
+		userState =
+		#{userState,jdbcType=INTEGER},
+		registerDate =
+		#{registerDate,jdbcType=TIMESTAMP},
+		userImg =
+		#{userImg,jdbcType=LONGVARCHAR},
+		userDetail =
+		#{userDetail,jdbcType=LONGVARCHAR}
+		where userId =
+		#{userId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.User">
+		update user
+		set
+		userAccount = #{userAccount,jdbcType=VARCHAR},
+		userPassword =
+		#{userPassword,jdbcType=VARCHAR},
+		userName =
+		#{userName,jdbcType=VARCHAR},
+		userGender =
+		#{userGender,jdbcType=INTEGER},
+		userBirthDay =
+		#{userBirthDay,jdbcType=DATE},
+		userAddress =
+		#{userAddress,jdbcType=INTEGER},
+		userEmail =
+		#{userEmail,jdbcType=VARCHAR},
+		userState =
+		#{userState,jdbcType=INTEGER},
+		registerDate =
+		#{registerDate,jdbcType=TIMESTAMP}
+		where userId =
+		#{userId,jdbcType=INTEGER}
+	</update>
+</mapper>

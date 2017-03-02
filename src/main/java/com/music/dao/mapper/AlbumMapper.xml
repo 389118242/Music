@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.AlbumDao">
+	<resultMap id="AlbumResultMap" type="com.music.entity.Album">
+		<id column="albumId" jdbcType="INTEGER" property="albumId" />
+		<result column="singerId" jdbcType="INTEGER" property="singerId" />
+		<result column="albumName" jdbcType="VARCHAR" property="albumName" />
+		<result column="issueCompany" jdbcType="INTEGER" property="issueCompany" />
+		<result column="issueTime" jdbcType="DATE" property="issueTime" />
+		<result column="albumImg" jdbcType="VARCHAR" property="albumImg" />
+	</resultMap>
+	<resultMap id="AlbumWithSingerResultMap" type="com.music.entity.Album">
+		<id column="albumId" jdbcType="INTEGER" property="albumId" />
+		<result column="albumName" jdbcType="VARCHAR" property="albumName" />
+		<result column="albumImg" jdbcType="VARCHAR" property="albumImg" />
+		<association property="singer" javaType="singer">
+			<id column="singerId" property="singerId" />
+			<result column="singerName" property="singerName" />
+		</association>
+	</resultMap>
+	<resultMap extends="AlbumResultMap" id="ResultMapWithBLOBs"
+		type="com.music.entity.Album">
+		<result column="albumDetail" jdbcType="LONGVARCHAR" property="albumDetail" />
+	</resultMap>
+	<resultMap type="album" id="selectByIdRM">
+		<id column="albumId" property="albumId" />
+		<result column="albumName" property="albumName" />
+		<result column="albumImg" property="albumImg" />
+		<result column="albumDetail" property="albumDetail" />
+		<association property="singer" javaType="singer">
+			<id column="singerId" property="singerId" />
+			<result column="singerName" property="singerName" />
+		</association>
+		<association property="company" javaType="recordCompany">
+			<result column="companyName" property="companyName" />
+		</association>
+		<collection property="songs" ofType="song">
+			<id column="songId" jdbcType="INTEGER" property="songId" />
+			<result column="songName" jdbcType="VARCHAR" property="songName" />
+			<result column="songTime" jdbcType="VARCHAR" property="songTime" />
+		</collection>
+	</resultMap>
+	<sql id="Base_Column_List">
+		albumId, singerId, albumName, issueCompany, issueTime,
+		albumImg
+	</sql>
+	<sql id="Blob_Column_List">
+		albumDetail
+	</sql>
+
+	<select id="selectByAlbumId" resultMap="selectByIdRM">
+		select
+		a.albumId,a.albumName,a.albumImg,a.albumDetail,rc.companyName,si.singerId,si.singerName,so.songId,so.songName,so.songTime
+		from album a,record_company rc,singer si,song so
+		where
+		a.albumId=so.albumId and a.issueCompany=rc.rcId and
+		a.singerId=si.singerId and a.albumId=#{albumId}
+	</select>
+
+	<select id="selectImgAndNameByid" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select albumImg,albumName
+		from album
+		where albumId =
+		#{albumId,jdbcType=INTEGER}
+	</select>
+	<!--通过singerId查找专辑数量 -->
+	<select id="selectRowsumBySingerId" parameterType="java.lang.Integer"
+		resultType="Integer">
+		select count(*) as rowsum
+		from album
+		where
+		singerId=#{singerId,jdbcType=INTEGER}
+	</select>
+	<!-- 通过singerId查找专辑专辑名，发行时间，图片,分页 -->
+	<select id="selectAlbumBySingerId" resultMap="AlbumResultMap">
+		select
+		albumName,issueTime,albumImg
+		from album
+		where singerId=#{0} LIMIT
+		#{1},#{2};
+	</select>
+	<select id="selectRowsumByKeyword" resultType="integer">
+		select count(*)
+		from album where albumName like '%${value}%'
+	</select>
+	<select id="selectAlbumByKeyword" resultMap="AlbumWithSingerResultMap">
+		select
+		a.albumId,a.albumName,a.albumImg,s.singerId,s.singerName from album
+		a,singer s where a.singerId=s.singerId and albumName like
+		'%${param1}%'
+		limit #{param2},#{param3}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from album
+		where albumId = #{albumId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.Album">
+		insert into album (albumId,
+		singerId, albumName,
+		issueCompany, issueTime, albumImg,
+		albumDetail)
+		values (#{albumId,jdbcType=INTEGER}, #{singerId,jdbcType=INTEGER},
+		#{albumName,jdbcType=VARCHAR},
+		#{issueCompany,jdbcType=INTEGER},
+		#{issueTime,jdbcType=DATE}, #{albumImg,jdbcType=VARCHAR},
+		#{albumDetail,jdbcType=LONGVARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.Album">
+		insert into album
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="albumId != null">
+				albumId,
+			</if>
+			<if test="singerId != null">
+				singerId,
+			</if>
+			<if test="albumName != null">
+				albumName,
+			</if>
+			<if test="issueCompany != null">
+				issueCompany,
+			</if>
+			<if test="issueTime != null">
+				issueTime,
+			</if>
+			<if test="albumImg != null">
+				albumImg,
+			</if>
+			<if test="albumDetail != null">
+				albumDetail,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="albumId != null">
+				#{albumId,jdbcType=INTEGER},
+			</if>
+			<if test="singerId != null">
+				#{singerId,jdbcType=INTEGER},
+			</if>
+			<if test="albumName != null">
+				#{albumName,jdbcType=VARCHAR},
+			</if>
+			<if test="issueCompany != null">
+				#{issueCompany,jdbcType=INTEGER},
+			</if>
+			<if test="issueTime != null">
+				#{issueTime,jdbcType=DATE},
+			</if>
+			<if test="albumImg != null">
+				#{albumImg,jdbcType=VARCHAR},
+			</if>
+			<if test="albumDetail != null">
+				#{albumDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.Album">
+		update album
+		<set>
+			<if test="singerId != null">
+				singerId = #{singerId,jdbcType=INTEGER},
+			</if>
+			<if test="albumName != null">
+				albumName = #{albumName,jdbcType=VARCHAR},
+			</if>
+			<if test="issueCompany != null">
+				issueCompany = #{issueCompany,jdbcType=INTEGER},
+			</if>
+			<if test="issueTime != null">
+				issueTime = #{issueTime,jdbcType=DATE},
+			</if>
+			<if test="albumImg != null">
+				albumImg = #{albumImg,jdbcType=VARCHAR},
+			</if>
+			<if test="albumDetail != null">
+				albumDetail = #{albumDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</set>
+		where albumId = #{albumId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKeyWithBLOBs" parameterType="com.music.entity.Album">
+		update
+		album
+		set singerId = #{singerId,jdbcType=INTEGER},
+		albumName =
+		#{albumName,jdbcType=VARCHAR},
+		issueCompany =
+		#{issueCompany,jdbcType=INTEGER},
+		issueTime =
+		#{issueTime,jdbcType=DATE},
+		albumImg = #{albumImg,jdbcType=VARCHAR},
+		albumDetail = #{albumDetail,jdbcType=LONGVARCHAR}
+		where albumId =
+		#{albumId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.Album">
+		update album
+		set
+		singerId = #{singerId,jdbcType=INTEGER},
+		albumName =
+		#{albumName,jdbcType=VARCHAR},
+		issueCompany =
+		#{issueCompany,jdbcType=INTEGER},
+		issueTime =
+		#{issueTime,jdbcType=DATE},
+		albumImg = #{albumImg,jdbcType=VARCHAR}
+		where albumId = #{albumId,jdbcType=INTEGER}
+	</update>
+</mapper>

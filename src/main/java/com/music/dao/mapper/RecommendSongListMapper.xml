@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.RecommendSongListDao">
+	<resultMap type="recommendSongList" id="myRM">
+		<result column="img" property="img" />
+		<association property="songList" javaType="songList">
+			<id column="listId" property="listId" />
+			<result column="listName" property="listName" />
+			<result column="listDetail" property="listDetail" />
+		</association>
+	</resultMap>
+
+	<select id="select" resultMap="myRM">
+		SELECT
+		rsl.img,sl.listId,sl.listName,sl.listDetail
+		from recommend_song_list rsl,song_list sl where rsl.slId=sl.listId order by rsl.index
+	</select>
+
+</mapper>

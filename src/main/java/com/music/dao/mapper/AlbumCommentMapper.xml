@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.AlbumCommentDao">
+	<resultMap type="comment" id="CommentResultMap">
+		<id column="comId" jdbcType="INTEGER" property="comId" />
+		<result column="likeNum" property="likeNum" />
+		<result column="comContent" property="comContent" />
+		<association property="user" javaType="userWithBLOBs">
+			<id column="userId" property="userId" />
+			<result column="userName" property="userName" />
+			<result column="userImg" property="userImg"/>
+		</association>
+		<association property="parent" javaType="comment">
+			<id column="p_comId" jdbcType="INTEGER" property="comId" />
+			<result column="p_likeNum" property="likeNum" />
+			<result column="p_comContent" property="comContent" />
+			<association property="user" javaType="userWithBLOBs">
+				<id column="p_userId" property="userId" />
+				<result column="p_userName" property="userName" />
+				<result column="p_userImg" property="userImg"/>
+			</association>
+		</association>
+	</resultMap>
+	<insert id="insert">
+		insert into alb_com_relation
+		values(#{albId},#{comId})
+	</insert>
+	<delete id="delete">
+		delete from alb_com_relation where comId=#{comId}
+	</delete>
+	<select id="select" resultMap="CommentResultMap">
+		select
+		sc.comId,sc.likeNum,sc.comContent,sc.userId,sc.userName,sc.userImg,pc.comId
+		p_comId,pc.likeNum p_likeNum,pc.comContent p_comContent,pc.userId
+		p_userId,pc.userName p_userName,pc.userImg p_userImg from (select
+		c.comId,c.comContent,c.likeNum,c.parentId,u.userId,u.userName,u.userImg from
+		comment c,user u where c.userId=u.userId) sc LEFT JOIN (select
+		c.comId,c.comContent,c.likeNum,u.userId,u.userName,u.userImg from comment c,user
+		u where c.userId=u.userId) pc on sc.parentId=pc.comId where sc.comId
+		in (select comId from alb_com_relation
+		where albId=#{albId}) or
+		parentId=null order by
+		comId desc limit #{begin},#{count}
+	</select>
+	<select id="selectCount" resultType="_int">
+		select count(*) from
+		alb_com_relation where
+		albId=#{albId}
+	</select>
+</mapper>

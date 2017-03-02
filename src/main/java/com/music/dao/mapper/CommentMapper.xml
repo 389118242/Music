@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.CommentDao">
+	<resultMap id="BaseResultMap" type="com.music.entity.Comment">
+		<id column="comId" jdbcType="INTEGER" property="comId" />
+		<result column="userId" jdbcType="INTEGER" property="userId" />
+		<result column="likeNum" jdbcType="INTEGER" property="likeNum" />
+		<result column="parentId" jdbcType="INTEGER" property="parentId" />
+	</resultMap>
+	<resultMap extends="BaseResultMap" id="ResultMapWithBLOBs"
+		type="com.music.entity.Comment">
+		<result column="comContent" jdbcType="LONGVARCHAR" property="comContent" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		comId, userId, likeNum, parentId
+	</sql>
+	<sql id="Blob_Column_List">
+		comContent
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select userId,comContent
+		<!-- 
+		<include refid="Base_Column_List" />
+		,
+		<include refid="Blob_Column_List" />
+		 -->
+		from comment
+		where comId = #{comId,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from
+		comment
+		where comId = #{comId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.Comment">
+		insert into comment (comId,
+		userId, likeNum,
+		parentId, comContent)
+		values
+		(#{comId,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER},
+		#{likeNum,jdbcType=INTEGER},
+		#{parentId,jdbcType=INTEGER},
+		#{comContent,jdbcType=LONGVARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.Comment"
+		useGeneratedKeys="true" keyProperty="comId">
+		insert into comment
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="comId != null">
+				comId,
+			</if>
+			<if test="userId != null">
+				userId,
+			</if>
+			<if test="likeNum != null">
+				likeNum,
+			</if>
+			<if test="parentId != null">
+				parentId,
+			</if>
+			<if test="comContent != null">
+				comContent,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="comId != null">
+				#{comId,jdbcType=INTEGER},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=INTEGER},
+			</if>
+			<if test="likeNum != null">
+				#{likeNum,jdbcType=INTEGER},
+			</if>
+			<if test="parentId != null">
+				#{parentId,jdbcType=INTEGER},
+			</if>
+			<if test="comContent != null">
+				#{comContent,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.Comment">
+		update comment
+		<set>
+			<if test="userId != null">
+				userId = #{userId,jdbcType=INTEGER},
+			</if>
+			<if test="likeNum != null">
+				likeNum = #{likeNum,jdbcType=INTEGER},
+			</if>
+			<if test="parentId != null">
+				parentId = #{parentId,jdbcType=INTEGER},
+			</if>
+			<if test="comContent != null">
+				comContent = #{comContent,jdbcType=LONGVARCHAR},
+			</if>
+		</set>
+		where comId = #{comId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKeyWithBLOBs" parameterType="com.music.entity.Comment">
+		update
+		comment
+		set userId = #{userId,jdbcType=INTEGER},
+		likeNum =
+		#{likeNum,jdbcType=INTEGER},
+		parentId = #{parentId,jdbcType=INTEGER},
+		comContent = #{comContent,jdbcType=LONGVARCHAR}
+		where comId =
+		#{comId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.Comment">
+		update comment
+		set
+		userId = #{userId,jdbcType=INTEGER},
+		likeNum =
+		#{likeNum,jdbcType=INTEGER},
+		parentId = #{parentId,jdbcType=INTEGER}
+		where comId = #{comId,jdbcType=INTEGER}
+	</update>
+</mapper>

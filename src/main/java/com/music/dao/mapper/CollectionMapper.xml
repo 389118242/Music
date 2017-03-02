@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.CollectionDao">
+	<insert id="insert">
+		insert into collection values(#{1},#{0})
+	</insert>
+	<delete id="delete">
+		delete from collection where userId=#{0} and
+		listId=#{1}
+	</delete>
+	<delete id="deleteBySongListId">
+		delete from collection where listId=#{0}
+	</delete>
+	<select id="selectById" resultType="_int">
+		select count(*) from
+		collection where
+		userId=#{param1} and listId=#{param2}
+	</select>
+</mapper>

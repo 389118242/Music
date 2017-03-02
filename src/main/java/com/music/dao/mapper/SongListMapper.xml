@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.music.dao.SongListDao">
+
+	<resultMap type="songList" id="SongListWithUserSongResultMap">
+		<id column="listId" jdbcType="INTEGER" property="listId" />
+		<result column="listName" jdbcType="VARCHAR" property="listName" />
+		<result column="collectionNum" property="collectionNum" />
+		<result column="playNum" property="playNum" />
+		<result column="listImg" property="listImg" />
+		<association property="user" javaType="user">
+			<id column="userId" property="userId" />
+			<result column="userName" property="userName" />
+		</association>
+		<collection property="songsList" ofType="song">
+			<id column="songId" property="songId" />
+		</collection>
+	</resultMap>
+
+	<!--歌单结果集被修改 -->
+	<resultMap id="SongListResultMap" type="com.music.entity.SongList">
+		<id column="listId" jdbcType="INTEGER" property="listId" />
+		<result column="listName" jdbcType="VARCHAR" property="listName" />
+		<result column="userId" jdbcType="INTEGER" property="userId" />
+		<result column="createTime" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="collectionNum" jdbcType="INTEGER" property="collectionNum" />
+		<result column="playNum" jdbcType="INTEGER" property="playNum" />
+		<result column="listImg" property="listImg" />
+		<collection property="songsList" resultMap="SongResultMap"></collection>
+	</resultMap>
+	<resultMap extends="SongListResultMap" id="ResultMapWithBLOBs"
+		type="com.music.entity.SongList">
+		<result column="listDetail" jdbcType="LONGVARCHAR" property="listDetail" />
+	</resultMap>
+
+	<!--添加歌曲结果集 -->
+	<resultMap id="SongResultMap" type="com.music.entity.Song">
+		<id column="songId" jdbcType="INTEGER" property="songId" />
+		<result column="songName" jdbcType="VARCHAR" property="songName" />
+		<result column="songTime" jdbcType="VARCHAR" property="songTime" />
+	</resultMap>
+
+	<!--添加用户结果集 -->
+	<resultMap id="UserResultMap" type="com.music.entity.User">
+		<id column="userId" jdbcType="INTEGER" property="userId" />
+		<result column="userAccount" jdbcType="VARCHAR" property="userAccount" />
+		<result column="userPassword" jdbcType="VARCHAR" property="userPassword" />
+		<result column="userName" jdbcType="VARCHAR" property="userName" />
+		<result column="userGender" jdbcType="INTEGER" property="userGender" />
+		<result column="userBirthDay" jdbcType="DATE" property="userBirthDay" />
+		<result column="userAddress" jdbcType="INTEGER" property="userAddress" />
+		<result column="userEmail" jdbcType="VARCHAR" property="userEmail" />
+		<result column="userState" jdbcType="INTEGER" property="userState" />
+		<result column="registerDate" jdbcType="TIMESTAMP" property="registerDate" />
+	</resultMap>
+
+	<resultMap type="songList" id="mSongListResultMap">
+		<id column="listId" property="listId" />
+		<result column="listName" property="listName" />
+		<result column="listImg" property="listImg" />
+		<association property="user" javaType="user">
+			<id column="userId" property="userId" />
+			<result column="userName" property="userName" />
+		</association>
+	</resultMap>
+
+	<select id="selectAllCount" resultType="_int">
+		select count(*) from
+		song_list where listName <![CDATA[<>]]>
+		'我喜欢的音乐'
+	</select>
+	<select id="selectAll" resultMap="mSongListResultMap">
+		select
+		sl.listId,sl.listName,sl.listImg,u.userId,u.userName from
+		song_list
+		sl,user u where sl.userId=u.userId and listName <![CDATA[<>]]>
+		'我喜欢的音乐' order by sl.listId
+	</select>
+
+	<select id="selectWithNameAndId" resultType="songList">
+		select
+		listName,userId from
+		song_list where listId=#{param}
+	</select>
+
+	<select id="selectRowsumByKeyword" resultType="_int">
+		select count(*)
+		from song_list where listName like '%${value}%' and
+		listName <![CDATA[<>]]>
+		'我喜欢的音乐'
+	</select>
+	<select id="selectBykeyword" resultMap="SongListWithUserSongResultMap">
+		select t.*,r.songId from
+		(select
+		listId,listName,collectionNum,playNum,u.userId,userName from
+		song_list
+		s,user u where s.userId=u.userId and listName like
+		'%${param1}%' and
+		listName <![CDATA[<>]]>
+		'我喜欢的音乐' order by listId) t LEFT JOIN
+		sl_song_relation r ON
+		t.listId=r.slId limit
+		#{1},#{2}
+	</select>
+
+	<!--添加选出歌单，传入歌单id返回歌单结果集(包含歌曲详细信息) -->
+	<select id="selectBySongListId" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		<!-- select s.songId,s.songName,s.songTime,sl.* from song s,song_list sl,sl_song_relation 
+			ssr where sl.listId=#{listId,jdbcType=INTEGER} and s.songId=ssr.songId and 
+			sl.listId=ssr.slId -->
+		select t1.*,s.songName,s.songTime from (select sl.*,ssr.songId from
+		song_list sl LEFT JOIN sl_song_relation ssr on sl.listId=ssr.slId
+		where sl.listId=#{param}) t1
+		LEFT JOIN song s on t1.songId=s.songId
+	</select>
+
+
+
+	<!--根据用户id选出相应的歌单集合(包含歌曲的详细信息) -->
+	<select id="selectByUserId" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select slr.songId,sls.* from (select sl.* from user
+		u,song_list sl where
+		u.userId=#{userId,jdbcType=INTEGER} and
+		u.userId=sl.userId order by sl.listId) sls left
+		outer join
+		sl_song_relation slr on
+		(slr.slId=sls.listId)
+	</select>
+
+	<!--根据用户id选出相应的歌单集合(不包含歌曲的详细信息) -->
+	<select id="selectByUserIdWithoutSong" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select sl.* from user u,song_list sl where
+		u.userId=#{userId,jdbcType=INTEGER} and u.userId=sl.userId order by
+		listId
+	</select>
+
+	<!--根据用户id找出其收藏的歌单（不包含歌曲信息） -->
+	<select id="selectCollectionByUserIdWithoutSong" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select sl.* from song_list sl,user u,collection c where
+		u.userId=#{userId,jdbcType=INTEGER} and u.userId=c.userId and
+		sl.listId=c.listId
+	</select>
+
+	<!--根据歌单id找出其建立者信息 -->
+	<select id="selectUser" parameterType="java.lang.Integer"
+		resultMap="UserResultMap">
+		select u.* from user u,song_list sl where
+		sl.listId=#{listId,jdbcType=INTEGER} and sl.userId=u.userId
+	</select>
+
+	<sql id="Base_Column_List">
+		listId, listName, userId, createTime, collectionNum,
+		playNum,listImg
+	</sql>
+	<sql id="Blob_Column_List">
+		listDetail
+	</sql>
+	<select id="selectByPrimaryKey" parameterType="java.lang.Integer"
+		resultMap="ResultMapWithBLOBs">
+		select
+		<include refid="Base_Column_List" />
+		,
+		<include refid="Blob_Column_List" />
+		from song_list
+		where listId = #{listId,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+		delete from
+		song_list
+		where listId = #{listId,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.music.entity.SongList">
+		insert into song_list (listId,
+		listName, userId,
+		createTime, collectionNum, playNum,
+		listDetail)
+		values
+		(#{listId,jdbcType=INTEGER}, #{listName,jdbcType=VARCHAR},
+		#{userId,jdbcType=INTEGER},
+		#{createTime,jdbcType=TIMESTAMP},
+		#{collectionNum,jdbcType=INTEGER}, #{playNum,jdbcType=INTEGER},
+		#{listDetail,jdbcType=LONGVARCHAR})
+	</insert>
+	<insert id="insertSelective" parameterType="com.music.entity.SongList"
+		useGeneratedKeys="true" keyProperty="listId">
+		insert into song_list
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+
+			<if test="listName != null">
+				listName,
+			</if>
+			<if test="listImg != null">
+				listImg,
+			</if>
+			<if test="userId != null">
+				userId,
+			</if>
+			<if test="createTime != null">
+				createTime,
+			</if>
+			<if test="collectionNum != null">
+				collectionNum,
+			</if>
+			<if test="playNum != null">
+				playNum,
+			</if>
+			<if test="listDetail != null">
+				listDetail,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+
+			<if test="listName != null">
+				#{listName,jdbcType=VARCHAR},
+			</if>
+			<if test="listImg != null">
+				#{listImg,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="collectionNum != null">
+				#{collectionNum,jdbcType=INTEGER},
+			</if>
+			<if test="playNum != null">
+				#{playNum,jdbcType=INTEGER},
+			</if>
+			<if test="listDetail != null">
+				#{listDetail,jdbcType=LONGVARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective" parameterType="com.music.entity.SongList">
+		update song_list
+		<set>
+			<if test="listName != null">
+				listName = #{listName,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				userId = #{userId,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="collectionNum != null">
+				collectionNum = #{collectionNum,jdbcType=INTEGER},
+			</if>
+			<if test="playNum != null">
+				playNum = #{playNum,jdbcType=INTEGER},
+			</if>
+			<if test="listDetail != null">
+				listDetail = #{listDetail,jdbcType=LONGVARCHAR},
+			</if>
+			<if test="listImg != null">
+				listImg = #{listImg,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where listId = #{listId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKeyWithBLOBs" parameterType="com.music.entity.SongList">
+		update
+		song_list
+		set listName = #{listName,jdbcType=VARCHAR},
+		userId =
+		#{userId,jdbcType=INTEGER},
+		createTime =
+		#{createTime,jdbcType=TIMESTAMP},
+		collectionNum =
+		#{collectionNum,jdbcType=INTEGER},
+		playNum =
+		#{playNum,jdbcType=INTEGER},
+		listDetail =
+		#{listDetail,jdbcType=LONGVARCHAR}
+		where listId =
+		#{listId,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey" parameterType="com.music.entity.SongList">
+		update song_list
+		set listName = #{listName,jdbcType=VARCHAR},
+		userId =
+		#{userId,jdbcType=INTEGER},
+		createTime =
+		#{createTime,jdbcType=TIMESTAMP},
+		collectionNum =
+		#{collectionNum,jdbcType=INTEGER},
+		playNum =
+		#{playNum,jdbcType=INTEGER}
+		where listId = #{listId,jdbcType=INTEGER}
+	</update>
+	<update id="updateCollectionNum">
+		update song_list set
+		collectionNum=collectionNum+#{param2} where listId=#{param1}
+	</update>
+	<update id="updatePlayNum">
+		update song_list set
+		playNum=playNum+1 where
+		listId=#{param}
+	</update>
+</mapper>
