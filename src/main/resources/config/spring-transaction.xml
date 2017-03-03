@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:advice id="tranAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="add*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="remove*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="is*" read-only="true" />
+			<tx:method name="selete*" read-only="true" />
+			<tx:method name="register" propagation="REQUIRED"
+				read-only="false" />
+			<tx:method name="update*" propagation="REQUIRED" read-only="false" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:advisor advice-ref="tranAdvice"
+			pointcut="execution(* com.music.biz.impl.*.*(..))" />
+	</aop:config>
+
+</beans>
